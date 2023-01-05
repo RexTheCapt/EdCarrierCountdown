@@ -48,13 +48,6 @@ namespace EdCarrierCountdown
             DateTimeOffset dto = new(root.timestamp);
             lastEvents.Add($"{dto.LocalDateTime} {root._event}");
 
-            //string s = "";
-
-            //foreach (string l in lastEvents)
-            //    s += $"{l}\r\n";
-
-            //textBox1.Text = s;
-
             if (!subs.Contains(ev)) return;
 
             switch (ev)
@@ -102,26 +95,24 @@ namespace EdCarrierCountdown
 
             TimeSpan maxmin = new(0, 20, 0);
 
-            if (countdownTick % 10 != 0) return;
+                if (countdownTick % 10 != 0) return;
 
-            if (countdownTick % 20 == 0)
-                panel1.BackgroundImage?.Dispose();
-            if (countdownTick % 20 == 10)
-                panel2.BackgroundImage?.Dispose();
-            
-            var width = this.Width;
+                if (countdownTick % 20 == 0)
+                    panel1.BackgroundImage?.Dispose();
+                if (countdownTick % 20 == 10)
+                    panel2.BackgroundImage?.Dispose();
+
+                var width = this.Width;
                 var img = new Bitmap(width, 1);
-                TimeSpan maxmin = new(0, 20, 0);
 
-            for (int w = 0; w < width; w++)
-            {
-                double part = maxmin.TotalMilliseconds / width * w;
+                for (int w = 0; w < width; w++)
+                {
+                    double part = maxmin.TotalMilliseconds / width * w;
 
-                Color c;
+                    Color c;
 
                     Color lockinColor = Color.DarkGreen;
                     Color lockdownColor1 = Color.Green;
-                    Color lockdownColor2 = Color.Magenta;
                     Color jumpColor = Color.Blue;
                     Color EtaArrivalColor = Color.Orange;
                     Color cooldownColor = Color.Cyan;
@@ -132,27 +123,27 @@ namespace EdCarrierCountdown
                         c = lockdownColor1;
                 else if (jump.TotalMilliseconds > part)
                         c = jumpColor;
-                else if (EtaArrival.TotalMilliseconds > part)
+                    else if (EtaArrival.TotalMilliseconds > part)
                         c = EtaArrivalColor;
-                else if (cooldown.TotalMilliseconds > part)
+                    else if (cooldown.TotalMilliseconds > part)
                         c = cooldownColor;
-                else
-                    c = this.BackColor;
+                    else
+                        c = this.BackColor;
 
-                img.SetPixel(w, 0, c);
-            }
+                    img.SetPixel(w, 0, c);
+                }
 
-            if (countdownTick % 20 == 0)
-            {
-                panel1.BackgroundImage = img;
-                panel1.BringToFront();
+                if (countdownTick % 20 == 0)
+                {
+                    panel1.BackgroundImage = img;
+                    panel1.BringToFront();
+                }
+                if (countdownTick % 20 == 10)
+                {
+                    panel2.BackgroundImage = img;
+                    panel2.BringToFront();
+                }
             }
-            if (countdownTick % 20 == 10)
-            {
-                panel2.BackgroundImage = img;
-                panel2.BringToFront();
-            }
-        }
             else
                 sb.Append($"--:-- | --:-- | --:-- | --:--\n");
 
