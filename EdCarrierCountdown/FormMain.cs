@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Text;
 
 using EdTools;
 
@@ -83,15 +84,21 @@ namespace EdCarrierCountdown
         {
             countdownTick++;
             js.Tick();
+            StringBuilder sb = new();
 
-            var lockdown = GetTime(jumpETA.AddMinutes(-3).AddSeconds(-20));
-            var jump = GetTime(jumpETA);
-            var EtaArrival = GetTime(jumpETA.AddSeconds(60));
-            var cooldown = GetTime(jumpETA.AddMinutes(5).AddSeconds(-10), false);
+            if (jumpETA != DateTime.MinValue)
+            {
+                TimeSpan lockdown;
+                TimeSpan jump;
+                TimeSpan EtaArrival;
+                TimeSpan cooldown;
 
-            string output = $"{lockdown:mm\\:ss} | {jump:mm\\:ss} | {EtaArrival:mm\\:ss} | {cooldown:mm\\:ss}\n{SystemName}\n{fuelLevel}t | {jumpRangeCurr}ly";
+                lockdown = GetTime(jumpETA.AddMinutes(-3).AddSeconds(-20));
+                jump = GetTime(jumpETA);
+                EtaArrival = GetTime(jumpETA.AddSeconds(60));
+                cooldown = GetTime(jumpETA.AddMinutes(5).AddSeconds(-10), false);
 
-            label1.Text = label2.Text = output;
+                sb.Append($"{lockdown:mm\\:ss} | {jump:mm\\:ss} | {EtaArrival:mm\\:ss} | {cooldown:mm\\:ss}\n");
 
             TimeSpan maxmin = new(0, 20, 0);
 
@@ -103,7 +110,8 @@ namespace EdCarrierCountdown
                 panel2.BackgroundImage?.Dispose();
             
             var width = this.Width;
-            var img = new Bitmap(width,1);
+                var img = new Bitmap(width, 1);
+                TimeSpan maxmin = new(0, 20, 0);
 
             for (int w = 0; w < width; w++)
             {
@@ -111,14 +119,23 @@ namespace EdCarrierCountdown
 
                 Color c;
 
-                if (lockdown.TotalMilliseconds > part)
-                    c = Color.Magenta;
+                    Color lockinColor = Color.DarkGreen;
+                    Color lockdownColor1 = Color.Green;
+                    Color lockdownColor2 = Color.Magenta;
+                    Color jumpColor = Color.Blue;
+                    Color EtaArrivalColor = Color.Orange;
+                    Color cooldownColor = Color.Cyan;
+
+                    if (jump.Add(new(0, -10, 0)).TotalMilliseconds > part)
+                        c = lockinColor;
+                    else if (lockdown.TotalMilliseconds > part)
+                        c = lockdownColor1;
                 else if (jump.TotalMilliseconds > part)
-                    c = Color.Green;
+                        c = jumpColor;
                 else if (EtaArrival.TotalMilliseconds > part)
-                    c = Color.Yellow;
+                        c = EtaArrivalColor;
                 else if (cooldown.TotalMilliseconds > part)
-                    c = Color.Red;
+                        c = cooldownColor;
                 else
                     c = this.BackColor;
 
@@ -135,6 +152,13 @@ namespace EdCarrierCountdown
                 panel2.BackgroundImage = img;
                 panel2.BringToFront();
             }
+        }
+            else
+                sb.Append($"--:-- | --:-- | --:-- | --:--\n");
+
+            sb.Append($"{SystemName}\n{fuelLevel}t | {jumpRangeCurr}ly");
+
+            label1.Text = label2.Text = sb.ToString();
         }
 
         private TimeSpan GetTime(DateTime time, bool stayNegative = true)
