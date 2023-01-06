@@ -15,6 +15,7 @@ namespace EdCarrierCountdown
         private List<string> lastEvents = new();
         private int CarrierIndex = 0;
         private Settings settings = new Settings();
+        private bool ShiftIsHeld = false;
 
         public FormMain()
         {
@@ -30,6 +31,7 @@ namespace EdCarrierCountdown
                 File.WriteAllText("settings.json", JsonConvert.DeserializeObject<JObject>(JsonConvert.SerializeObject(settings)).ToString());
 
             JournalScanner.OnEventHandler += JournalScanner_OnEventHandler;
+            JournalScanner.OnErrorHandler += JournalScanner_OnErrorHandler;
 
             this.TopMost = true;
             panel1.BackgroundImageLayout = ImageLayout.Stretch;
@@ -37,6 +39,8 @@ namespace EdCarrierCountdown
             panel2.Parent = this;
 
             this.DoubleBuffered = true;
+            this.KeyDown += FormMain_KeyDown;
+            this.KeyUp += FormMain_KeyUp;
 
             label1.BackColor = Color.Transparent;
             label2.BackColor = Color.Transparent;
@@ -48,27 +52,31 @@ namespace EdCarrierCountdown
             label2.Click += Label_Click;
         }
 
+        private void JournalScanner_OnErrorHandler(object? sender, EventArgs e)
+        {
+            var eargs = (JournalScanner.OnErrorArgs)e;
+            MessageBox.Show(eargs.Exception.Message, "Read error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
+        private void FormMain_KeyUp(object? sender, KeyEventArgs e)
+        {
+            ShiftIsHeld = e.Shift;
+        }
+
+        private void FormMain_KeyDown(object? sender, KeyEventArgs e)
+        {
+            ShiftIsHeld = e.Shift;
+        }
+
         private void Label_Click(object? sender, EventArgs e)
         {
-            CarrierIndex++;
-
-            //if (carrierInfos.Count == 1)
-            //{
-            //    CarrierInfo ci = carrierInfos.First();
-
-            //    CarrierInfo n = new()
-            //    {
-            //        CallSign = "123-ABC",
-            //        Destination = "Sagittarius",
-            //        FuelLevel = 666,
-            //        Journal = "journal",
-            //        JumpETA = ci.JumpETA.AddDays(1).AddMinutes(-12),
-            //        JumpRangeCurr = 500,
-            //        JumpRangeMax = 500
-            //    };
-
-            //    carrierInfos.Add(n);
-            //}
+            if (ShiftIsHeld)
+            {
+                js.ScanAll();
+                ShiftIsHeld = false;
+            }
+            else
+                CarrierIndex++;
         }
 
         List<CarrierInfo> carrierInfos = new();
@@ -106,7 +114,17 @@ namespace EdCarrierCountdown
                     ci.CarrierID = root.CarrierID;
                     return;
                 case "CarrierJump":
-                    //Ci.SystemName = root.StarSystem;
+                    ci = carrierInfos.Find(x => x.CarrierID == root.MarketID || (x.CallSign != null && x.CallSign.Equals(root.StationName)) || x.Journal.Equals(eargs.Journal));
+
+                    if (ci == null)
+                    {
+                        ci = new();
+                        carrierInfos.Add(ci);
+                    }
+
+                    ci.Journal = eargs.Journal;
+                    ci.CarrierID = root.MarketID;
+                    ci.CallSign = root.StationName;
                     return;
                 case "CarrierStats":
                     ci = carrierInfos.Find(x => (x.CallSign != null && x.CallSign.Equals(root.Callsign)) || x.Journal.Equals(eargs.Journal));
