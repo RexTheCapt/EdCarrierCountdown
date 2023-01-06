@@ -4,6 +4,9 @@ using System.Text;
 
 using EdTools;
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 namespace EdCarrierCountdown
 {
     public partial class FormMain : Form
@@ -11,10 +14,20 @@ namespace EdCarrierCountdown
         private JournalScanner js = new();
         private List<string> lastEvents = new();
         private int CarrierIndex = 0;
+        private Settings settings = new Settings();
 
         public FormMain()
         {
             InitializeComponent();
+
+            if (File.Exists("settings.json"))
+            {
+                var v = JsonConvert.DeserializeObject<Settings>(File.ReadAllText("settings.json"));
+                if (v != null)
+                    settings = v;
+            }
+            else
+                File.WriteAllText("settings.json", JsonConvert.DeserializeObject<JObject>(JsonConvert.SerializeObject(settings)).ToString());
 
             JournalScanner.OnEventHandler += JournalScanner_OnEventHandler;
 
@@ -202,19 +215,20 @@ namespace EdCarrierCountdown
 
                         Color c;
 
-                        Color lockinColor = Color.DarkGreen;
-                        Color lockdownColor1 = Color.Green;
-                        Color jumpColor = Color.Yellow;
-                        Color EtaArrivalColor = Color.Red;
-                        Color cooldownColor = Color.DarkBlue;
+                        Color lockInColor = settings.GetLockInColor(); // Color.DarkGreen
+                        Color lockDownColor = settings.GetLockDownColor(); // Color.Green
+                        Color jumpColor = settings.GetJumpColor(); // Color.Yellow
+                        Color EtaArrivalColor = settings.GetEtaArrivalColor(); // Color.Red
+                        Color cooldownColor = settings.GetCooldownColor(); // Color.DarkBlue
+                        Color backgroundColor = settings.GetBackgroundColor();
 
                         if (jump.Add(new(0, -10, 0)).TotalMilliseconds > part)
                         {
-                            c = lockinColor;
+                            c = lockInColor;
                         }
                         else if (lockdown.TotalMilliseconds > part)
                         {
-                            c = lockdownColor1;
+                            c = lockDownColor;
                             stage = stage == null ? $"Lockdown {lockdown:mm\\:ss}" : stage;
                         }
                         else if (jump.TotalMilliseconds > part)
@@ -234,7 +248,7 @@ namespace EdCarrierCountdown
                         }
                         else
                         {
-                            c = this.BackColor;
+                            c = backgroundColor;
                             stage = stage == null ? $"Idle" : stage;
                         }
 
