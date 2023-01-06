@@ -46,7 +46,7 @@
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(249, 84);
             this.label1.TabIndex = 0;
-            this.label1.Text = "00:00 | 00:00 | 00:00 | 00:00\r\nSystem Name\r\n1000t | 500ly";
+            this.label1.Text = "00:00 | 00:00 | 00:00 | 00:00\r\nSystem Name\r\n1000t | 500ly | ABC-123";
             // 
             // timerCountdown
             // 
@@ -79,7 +79,7 @@
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(249, 84);
             this.label2.TabIndex = 2;
-            this.label2.Text = "00:00 | 00:00 | 00:00 | 00:00\r\nSystem Name\r\n1000t | 500ly";
+            this.label2.Text = "00:00 | 00:00 | 00:00 | 00:00\r\nSystem Name\r\n1000t | 500ly | ABC-123";
             // 
             // FormMain
             // 
