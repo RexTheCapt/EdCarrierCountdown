@@ -16,19 +16,13 @@ namespace EdCarrierCountdown
         private int CarrierIndex = 0;
         private Settings settings = new Settings();
         private bool ShiftIsHeld = false;
+        private DateTime FileErrorTime = DateTime.MinValue;
 
         public FormMain()
         {
             InitializeComponent();
 
-            if (File.Exists("settings.json"))
-            {
-                var v = JsonConvert.DeserializeObject<Settings>(File.ReadAllText("settings.json"));
-                if (v != null)
-                    settings = v;
-            }
-            else
-                File.WriteAllText("settings.json", JsonConvert.DeserializeObject<JObject>(JsonConvert.SerializeObject(settings)).ToString());
+            LoadSettings();
 
             JournalScanner.OnEventHandler += JournalScanner_OnEventHandler;
             JournalScanner.OnErrorHandler += JournalScanner_OnErrorHandler;
@@ -50,6 +44,42 @@ namespace EdCarrierCountdown
 
             label1.Click += Label_Click;
             label2.Click += Label_Click;
+        }
+
+        private void LoadSettings()
+        {
+            if (File.Exists("settings.json"))
+            {
+                try
+                {
+                    var v = JsonConvert.DeserializeObject<Settings>(File.ReadAllText("settings.json"));
+                    if (v != null)
+                        settings = v;
+                }
+                catch (Exception e)
+                {
+                    var fi = new FileInfo("settings.json");
+                    if (FileErrorTime != fi.LastWriteTime)
+                    {
+                        FileErrorTime = fi.LastWriteTime;
+                        DialogResult dialogResult = MessageBox.Show("Failed to load settings, reset?", "Incorrect settings", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
+
+                        if (dialogResult == DialogResult.Yes)
+                        {
+                            File.Delete("settings.json");
+                            LoadSettings();
+                            return;
+                        }
+                    }
+                    return;
+                }
+            }
+            else
+            {
+                settings = new Settings();
+                JObject? j = JsonConvert.DeserializeObject<JObject>(JsonConvert.SerializeObject(settings));
+                File.WriteAllText("settings.json", j.ToString());
+            }
         }
 
         private void JournalScanner_OnErrorHandler(object? sender, EventArgs e)
@@ -204,7 +234,7 @@ namespace EdCarrierCountdown
                 lockdown = GetTime(ci.JumpETA.AddMinutes(-3).AddSeconds(-20));
                 jump = GetTime(ci.JumpETA);
                 EtaArrival = GetTime(ci.JumpETA.AddSeconds(60));
-                cooldown = GetTime(ci.JumpETA.AddMinutes(5).AddSeconds(-10), false);
+                cooldown = GetTime(ci.JumpETA.AddMinutes(5).AddSeconds(-11), false);
 
                 if (cooldown > new TimeSpan(0, 0, 0))
                 {
@@ -284,6 +314,10 @@ namespace EdCarrierCountdown
                         panel2.BackgroundImage = img;
                         panel1.BringToFront();
                         this.Text = stage;
+                    }
+                    if (countdownTick % 50 == 0)
+                    {
+                        LoadSettings();
                     }
                 }
             }
