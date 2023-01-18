@@ -85,7 +85,13 @@ namespace EdCarrierCountdown
         private void JournalScanner_OnErrorHandler(object? sender, EventArgs e)
         {
             var eargs = (JournalScanner.OnErrorArgs)e;
-            MessageBox.Show(eargs.Exception.Message, "Read error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            DialogResult dialogResult = MessageBox.Show($"{eargs.Exception.Message}\n\nPress cancel to stop read all", "Read error", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+
+            if (dialogResult == DialogResult.Cancel)
+            {
+                js.Dispose();
+                js = new();
+            }
         }
 
         private void FormMain_KeyUp(object? sender, KeyEventArgs e)
